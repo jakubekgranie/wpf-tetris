@@ -103,7 +103,7 @@ namespace tetris
         }
         public bool sprawdzKompatybilnosc(int i, int cols, int rows, Key wasd)
         {
-            if (klocek[i][0] + cols > 10 - cols || klocek[i][0] + cols < - cols) // scenario 1: klocek jest na maksymalnie niskiej pozycji/pod nim znajduje sie klocek; zakoncz dzialanie i stworz nowy
+            if (klocek[i][0] + cols > 10 - cols || klocek[i][0] + cols < 0) // scenario 1: klocek jest na maksymalnie niskiej pozycji/pod nim znajduje sie klocek; zakoncz dzialanie i stworz nowy
                 return true;
             if (klocek[i][1] + rows > 20 - rows)
             {
@@ -141,7 +141,7 @@ namespace tetris
                     if (!kill)
                         kill = sprawdzKompatybilnosc(i, cols, rows, wasd);
                 if (!kill)
-                    for (int i = 0; i < 4; i++)
+                    for (int i = 3; i > -1; i--)
                         zamien(i, cols, rows);
                 else
                 {
