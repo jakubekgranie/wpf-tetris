@@ -140,7 +140,7 @@ namespace tetris
             Grid.SetRow(odzwierciedlenie[klocek[i][0]][klocek[i][1]], klocek[i][1]);
             */
         }
-        public bool SprawdzKompatybilnosc(int i, int cols, int rows, Key wasd)
+        public bool SprawdzKompatybilnosc(int i, int cols, int rows, bool falling)
         {
             if (klocek[i][0] + cols > 10 - cols || klocek[i][0] + cols < 0) // scenario 1: klocek jest na maksymalnie niskiej pozycji/pod nim znajduje sie klocek; zakoncz dzialanie i stworz nowy
                 return true;
@@ -151,7 +151,7 @@ namespace tetris
             }
             if (((SolidColorBrush)odzwierciedlenie[klocek[i][0] + cols][klocek[i][1] + rows].Background).Color == Colors.White && !Znajdz(klocek[i][0] + cols, klocek[i][1] + rows))
             {
-                if (wasd == Key.S)
+                if (falling)
                 {
                     isAlive = false;
                     ZastapKlocek();
@@ -160,14 +160,14 @@ namespace tetris
             }
             return false;
         }
-        public void Przemiesc(Key wasd, bool reverse, int cols = 0, int rows = 1)
+        public void Przemiesc(bool reverse, bool falling, int cols = 0, int rows = 1)
         {
             bool kill = false;
             if (!reverse)
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    kill = SprawdzKompatybilnosc(i, cols, rows, wasd);
+                    kill = SprawdzKompatybilnosc(i, cols, rows, falling);
                     if (kill)
                         break;
                 }
@@ -184,7 +184,7 @@ namespace tetris
             {
                 for (int i = 3; i > -1; i--)
                 {
-                    kill = SprawdzKompatybilnosc(i, cols, rows, wasd);
+                    kill = SprawdzKompatybilnosc(i, cols, rows, falling);
                     if (kill)
                         break;
                 }
@@ -211,12 +211,12 @@ namespace tetris
                     return;
                 }
                 // sprawdz, czy mozna przesunac klocek
-                Przemiesc(Key.S, false);
+                Przemiesc(false, true);
             }
             else
                 PrzyspieszCzasomierz();
         }
-        public void Core(int cols, int rows, bool reverse, Key wasd)
+        public void Core(int cols, int rows, bool reverse = false, bool falling = false)
         {
             if (!_lock)
             {
@@ -227,21 +227,21 @@ namespace tetris
                     return;
                 }
                 // sprawdz, czy mozna przesunac klocek
-                Przemiesc(wasd, reverse, cols, rows);
+                Przemiesc(reverse, falling, cols, rows);
             }
         }
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             switch (e.Key) {
                 case Key.A:
-                    Core(-1, 0, true, Key.A);
+                    Core(-1, 0, true);
                     break;
                 case Key.D:
-                    Core(1, 0, false, Key.D); 
+                    Core(1, 0, false); 
                     break;
                 case Key.S:
                     licznik.Stop();
-                    Core(0, 1, false, Key.S);
+                    Core(0, 1, false, true);
                     licznik.Start();
                     break;
             }
