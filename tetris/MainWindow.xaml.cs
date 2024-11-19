@@ -17,35 +17,53 @@ namespace tetris
     /// </summary>
     public partial class MainWindow : Window
     {
-        System.Windows.Threading.DispatcherTimer licznik = new System.Windows.Threading.DispatcherTimer(); // odliczanie
-        List<List<Button>> odzwierciedlenie = new List<List<Button>>(); // konwersja grida
-        List<int[][]> ksztalty = new List<int[][]>(); // lista ksztaltow
-        bool isAlive = false, // czy klocek leci
+        private static readonly DispatcherTimer licznik = new(); // odliczanie
+        private static readonly List<List<Button>> odzwierciedlenie = [], previewGrid = []; // konwersja grida, podglad nastepnego klocka
+        private static readonly List<int[][]> ksztalty = []; // lista ksztaltow
+        bool isAlive, // czy klocek leci
             _lock = false, // czy wykonywana jest akcja
             resetTimer = false; // czy nalezy przywrocic licznik
-        int[][] klocek; // dane o pozycji klocka
-        SolidColorBrush filler = new SolidColorBrush(Colors.White);
+        int[][] klocek = [[]], klocek2 = [[]]; // dane o pozycji klocka, dane o pozycji nastepnego klocka
+        private static readonly Random random = new(); // generator liczb losowych
         public MainWindow()
         {
             InitializeComponent();
             for (int i = 0; i < 10; i++)
             {
-                odzwierciedlenie.Add(new List<Button>());
+                odzwierciedlenie.Add([]);
                 for (int j = 0; j < 20; j++)
                 {
-                    Button przycisk = new Button();
-                    przycisk.Background = new SolidColorBrush(Colors.SkyBlue);
-                    przycisk.BorderBrush = new SolidColorBrush(Colors.CadetBlue);
-                    przycisk.BorderThickness = new Thickness(1);
+                    Button przycisk = new()
+                    {
+                        Background = new SolidColorBrush(Colors.SkyBlue),
+                        BorderBrush = new SolidColorBrush(Colors.CadetBlue),
+                        BorderThickness = new Thickness(1)
+                    };
                     this.siatka.Children.Add(przycisk);
                     Grid.SetColumn(przycisk, i);
                     Grid.SetRow(przycisk, j);
-                    odzwierciedlenie[odzwierciedlenie.Count - 1].Add(przycisk);
+                    odzwierciedlenie[^1].Add(przycisk);
                 }
             }
-            licznik.Tick += czasomierz;
+            for (int i = 0; i < 4; i++)
+            {
+                previewGrid.Add([]);
+                for(int j = 0; j < 4; j++)
+                {
+                    Button przycisk = new()
+                    {
+                        Background = new SolidColorBrush(Colors.SkyBlue),
+                        BorderBrush = new SolidColorBrush(Colors.CadetBlue),
+                        BorderThickness = new Thickness(1)
+                    };
+                    this.preview.Children.Add(przycisk);
+                    Grid.SetColumn(przycisk, i);
+                    Grid.SetRow(przycisk, j);
+                    previewGrid[^1].Add(przycisk);
+                }
+            }
+            licznik.Tick += Czasomierz;
             licznik.Interval = new TimeSpan(0, 0, 1);
-            licznik.Start();
             ksztalty.Add([[5, 1], [4, 1], [5, 0], [4, 0]]); // kwadrat
             ksztalty.Add([[6, 0], [5, 0], [4, 0], [3, 0]]); // slup
             ksztalty.Add([[4, 1], [3, 1], [5, 0], [4, 0]]); // lhh
@@ -53,8 +71,28 @@ namespace tetris
             ksztalty.Add([[5, 2], [4, 2], [4, 1], [4, 0]]); // 3-1
             ksztalty.Add([[5, 2], [5, 1], [5, 0], [4, 0]]); // 1-3
             ksztalty.Add([[4, 1], [5, 0], [4, 0], [3, 0]]); // szpic
+            LosujPrzyszlyKlocek();
+            licznik.Start();
         }
-        public void przyspieszCzasomierz()
+        public void LosujPrzyszlyKlocek()
+        {
+            klocek2 = ksztalty[random.Next(7)].Select(x => x.ToArray()).ToArray();
+            for (int i = 0; i < 4; i++)
+                for(int j = 0; j < 4; j++)
+                    previewGrid[i][j].Background = new SolidColorBrush(Colors.SkyBlue); // nowe przyciski nie dzialaja
+            for (int i = 0; i < klocek2.Length; i++)
+                previewGrid[klocek2[i][0] - 3][klocek2[i][1]].Background = new SolidColorBrush(Colors.White);
+        }
+        public void ZastapKlocek()
+        {
+            klocek = klocek2.Select(x => x.ToArray()).ToArray();
+            for (int i = 0; i < klocek.Length; i++)
+                odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background = new SolidColorBrush(Colors.White);
+            LosujPrzyszlyKlocek();
+            isAlive = true;
+            _lock = false;
+        }
+        public void PrzyspieszCzasomierz()
         {
             if (!resetTimer) // by nie wybuchlo
             {
@@ -64,7 +102,7 @@ namespace tetris
                 resetTimer = true;
             }
         }
-        public void resetujCzasomierz()
+        public void ResetujCzasomierz()
         {
             if (resetTimer) // usprawnione odstepy czasowe
             {
@@ -74,34 +112,35 @@ namespace tetris
                 resetTimer = false;
             }
         }
-        private bool znajdz(int col, int row)
+        private bool Znajdz(int col, int row)
         {
             for (int i = 0; i < 4; i++)
                 if (klocek[i][0] == col && klocek[i][1] == row)
                     return true;
             return false;
         }
-        public void zamien(int i, int cols, int rows)
+        public void Zamien(int i, int cols, int rows)
         {
             klocek[i][0] += cols;
             klocek[i][1] += rows;
 
             SolidColorBrush kolor;
-            int i2 = i;
-            int os2 = klocek[i][0], i3 = klocek[i][1];
             if (odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background == new SolidColorBrush(Colors.White))
                 kolor = new SolidColorBrush(Colors.White);
             else
                 kolor = new SolidColorBrush(Colors.SkyBlue);
             odzwierciedlenie[klocek[i][0] - cols][klocek[i][1] - rows].Background = kolor;
+            /* niepotrzebne?
             Grid.SetColumn(odzwierciedlenie[klocek[i][0] - cols][klocek[i][1] - rows], klocek[i][0] - cols);
             Grid.SetRow(odzwierciedlenie[klocek[i][0] - cols][klocek[i][1] - rows], klocek[i][1] - rows);
-
+            */
             odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background = new SolidColorBrush(Colors.White);
+            /* niepotrzebne?
             Grid.SetColumn(odzwierciedlenie[klocek[i][0]][klocek[i][1]], klocek[i][0]);
             Grid.SetRow(odzwierciedlenie[klocek[i][0]][klocek[i][1]], klocek[i][1]);
+            */
         }
-        public bool sprawdzKompatybilnosc(int i, int cols, int rows, Key wasd)
+        public bool SprawdzKompatybilnosc(int i, int cols, int rows, Key wasd)
         {
             if (klocek[i][0] + cols > 10 - cols || klocek[i][0] + cols < 0) // scenario 1: klocek jest na maksymalnie niskiej pozycji/pod nim znajduje sie klocek; zakoncz dzialanie i stworz nowy
                 return true;
@@ -110,25 +149,31 @@ namespace tetris
                 isAlive = false;
                 return true;
             }
-            if ((odzwierciedlenie[klocek[i][0] + cols][klocek[i][1] + rows].Background as SolidColorBrush).Color == Colors.White && !znajdz(klocek[i][0] + cols, klocek[i][1] + rows))
+            if (((SolidColorBrush)odzwierciedlenie[klocek[i][0] + cols][klocek[i][1] + rows].Background).Color == Colors.White && !Znajdz(klocek[i][0] + cols, klocek[i][1] + rows))
             {
-                if(wasd == Key.S)
+                if (wasd == Key.S)
+                {
                     isAlive = false;
+                    ZastapKlocek();
+                }
                 return true;
             }
             return false;
         }
-        public void przemiesc(Key wasd, bool reverse, int cols = 0, int rows = 1)
+        public void Przemiesc(Key wasd, bool reverse, int cols = 0, int rows = 1)
         {
             bool kill = false;
             if (!reverse)
             {
                 for (int i = 0; i < 4; i++)
-                    if(!kill)
-                        kill = sprawdzKompatybilnosc(i, cols, rows, wasd);
+                {
+                    kill = SprawdzKompatybilnosc(i, cols, rows, wasd);
+                    if (kill)
+                        break;
+                }
                 if (!kill)
                     for (int i = 0; i < 4; i++)
-                        zamien(i, cols, rows);
+                        Zamien(i, cols, rows);
                 else
                 {
                     _lock = false;
@@ -138,11 +183,14 @@ namespace tetris
             else
             {
                 for (int i = 3; i > -1; i--)
-                    if (!kill)
-                        kill = sprawdzKompatybilnosc(i, cols, rows, wasd);
+                {
+                    kill = SprawdzKompatybilnosc(i, cols, rows, wasd);
+                    if (kill)
+                        break;
+                }
                 if (!kill)
                     for (int i = 3; i > -1; i--)
-                        zamien(i, cols, rows);
+                        Zamien(i, cols, rows);
                 else
                 {
                     _lock = false;
@@ -151,62 +199,49 @@ namespace tetris
             }
             _lock = false;
         }
-        public void czasomierz(object s, EventArgs e)
+        public void Czasomierz(object s, EventArgs e)
         {
             if (!_lock) 
             {
                 _lock = true;
-                resetujCzasomierz();
+                ResetujCzasomierz();
                 if (!isAlive) // automatyczne spadanie (2 ify)
                 {
-                    Random random = new Random();
-                    klocek = ksztalty[random.Next(7)];
-                    // sprawdź, czy można zrespić
-                    for (int i = 0; i < klocek.Length; i++)
-                        odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background = new SolidColorBrush(Colors.White);
-                    // licznik.Stop();
-                    isAlive = true;
-                    _lock = false;
+                    ZastapKlocek();
                     return;
                 }
                 // sprawdz, czy mozna przesunac klocek
-                przemiesc(Key.S, false);
+                Przemiesc(Key.S, false);
             }
             else
-                przyspieszCzasomierz();
+                PrzyspieszCzasomierz();
         }
-        public void core(int cols, int rows, bool reverse = false, Key wasd = Key.S)
+        public void Core(int cols, int rows, bool reverse, Key wasd)
         {
             if (!_lock)
             {
                 _lock = true;
                 if (!isAlive) // automatyczne spadanie (2 ify)
                 {
-                    Random random = new Random();
-                    klocek = ksztalty[random.Next(7)];
-                    // sprawdź, czy można zrespić
-                    for (int i = 0; i < klocek.Length; i++)
-                        odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background = new SolidColorBrush(Colors.White);
-                    // licznik.Stop();
-                    isAlive = true;
-                    _lock = false;
+                    ZastapKlocek();
                     return;
                 }
-                przemiesc(wasd, reverse, cols, rows);
+                // sprawdz, czy mozna przesunac klocek
+                Przemiesc(wasd, reverse, cols, rows);
             }
         }
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             switch (e.Key) {
                 case Key.A:
-                    core(-1, 0, true);
+                    Core(-1, 0, true, Key.A);
                     break;
                 case Key.D:
-                    core(1, 0); 
+                    Core(1, 0, false, Key.D); 
                     break;
                 case Key.S:
                     licznik.Stop();
-                    core(0, 1, false, Key.S);
+                    Core(0, 1, false, Key.S);
                     licznik.Start();
                     break;
             }
