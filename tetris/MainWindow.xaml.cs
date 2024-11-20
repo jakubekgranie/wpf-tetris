@@ -24,6 +24,7 @@ namespace tetris
             _lock = false, // czy wykonywana jest akcja
             resetTimer = false; // czy nalezy przywrocic licznik
         int[][] klocek = [[]], klocek2 = [[]]; // dane o pozycji klocka, dane o pozycji nastepnego klocka
+        int[] wylosowany = []; // potrzebne do definiowania rotacji siatki
         private static readonly Random random = new(); // generator liczb losowych
         public MainWindow()
         {
@@ -45,6 +46,8 @@ namespace tetris
                     odzwierciedlenie[^1].Add(przycisk);
                 }
             }
+            for (int i = 0; i < 10; i++)
+                odzwierciedlenie[i][^1].Background = new SolidColorBrush(Colors.White);
             for (int i = 0; i < 4; i++)
             {
                 previewGrid.Add([]);
@@ -83,8 +86,41 @@ namespace tetris
             for (int i = 0; i < klocek2.Length; i++)
                 previewGrid[klocek2[i][0] - 3][klocek2[i][1]].Background = new SolidColorBrush(Colors.White);
         }
+        public void DodajPunkty(double ilosc) // opcjonalna
+        {
+            iloscPunktow.Content = Int32.Parse(iloscPunktow.Content.ToString()) + ilosc;
+        }
         public void ZastapKlocek()
         {
+            // sprawdz, czy mozna usunac rzad; dodaj punkty i spowoduj upadek pozostalosci
+            double mnoznik = 1;
+            for (int j = 0; j < odzwierciedlenie[0].Count; j++) {
+                bool rowIntegrity = true;
+                //int j = 0; // nie widac w for(k)
+                for (int i = 0; i < odzwierciedlenie.Count; i++)
+                    if(((SolidColorBrush)odzwierciedlenie[i][j].Background).Color != Colors.White)
+                        rowIntegrity = false;
+                if (rowIntegrity)
+                {
+                    DodajPunkty(mnoznik * 1000);
+                    for(int k = 0; k < odzwierciedlenie.Count; k++) // usuwanie rzedu
+                        odzwierciedlenie[k][j].Background = new SolidColorBrush(Colors.SkyBlue);
+                    for (int k = j - 1; k > -1; k--) // spadanie klockow wyzej; i - 1 = rzad nad usunietym
+                        for (int l = 0; l < odzwierciedlenie.Count; l++)
+                        {
+                            List<List<Button>> a = odzwierciedlenie;
+                            if (((SolidColorBrush)odzwierciedlenie[l][k].Background).Color == Colors.White)
+                            {
+                                odzwierciedlenie[l][k].Background = new SolidColorBrush(Colors.SkyBlue);
+                                odzwierciedlenie[l][k + 1].Background = new SolidColorBrush(Colors.White); // klocek nizej; k = kolumny
+                            }
+                        }
+                    mnoznik += 0.5;
+                }
+                else
+                    mnoznik = 1;
+            }
+            // zdefiniuj nastepny klocek
             klocek = klocek2.Select(x => x.ToArray()).ToArray();
             for (int i = 0; i < klocek.Length; i++)
                 odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background = new SolidColorBrush(Colors.White);

@@ -60,7 +60,7 @@
                         <ColumnDefinition Width="auto"/>
                     </Grid.ColumnDefinitions>
                     <Label Grid.Column="0" FontFamily="Cascadia Mono">Punkty:</Label>
-                    <Label Grid.Column="1" FontFamily="Cascadia Mono">0</Label>
+                    <Label Grid.Column="1" FontFamily="Cascadia Mono" Name="iloscPunktow">0</Label>
                 </Grid>
                 <Label FontFamily="Bahnschrift SemiBold" HorizontalAlignment="Center" FontSize="11.5">Następny:</Label>
                 <Border Width="64" Height="64" HorizontalAlignment="Center" BorderBrush="CadetBlue" BorderThickness="2" Margin="0, 0, 0, 10">
