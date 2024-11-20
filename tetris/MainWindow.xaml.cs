@@ -166,15 +166,7 @@ namespace tetris
             else
                 kolor = new SolidColorBrush(Colors.SkyBlue);
             odzwierciedlenie[klocek[i][0] - cols][klocek[i][1] - rows].Background = kolor;
-            /* niepotrzebne?
-            Grid.SetColumn(odzwierciedlenie[klocek[i][0] - cols][klocek[i][1] - rows], klocek[i][0] - cols);
-            Grid.SetRow(odzwierciedlenie[klocek[i][0] - cols][klocek[i][1] - rows], klocek[i][1] - rows);
-            */
             odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background = new SolidColorBrush(Colors.White);
-            /* niepotrzebne?
-            Grid.SetColumn(odzwierciedlenie[klocek[i][0]][klocek[i][1]], klocek[i][0]);
-            Grid.SetRow(odzwierciedlenie[klocek[i][0]][klocek[i][1]], klocek[i][1]);
-            */
         }
         public bool SprawdzKompatybilnosc(int i, int cols, int rows, bool falling)
         {
@@ -183,6 +175,7 @@ namespace tetris
             if (klocek[i][1] + rows > 20 - rows)
             {
                 isAlive = false;
+                ZastapKlocek();
                 return true;
             }
             if (((SolidColorBrush)odzwierciedlenie[klocek[i][0] + cols][klocek[i][1] + rows].Background).Color == Colors.White && !Znajdz(klocek[i][0] + cols, klocek[i][1] + rows))
