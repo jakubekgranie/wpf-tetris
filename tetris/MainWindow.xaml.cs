@@ -18,14 +18,29 @@ namespace tetris
     public partial class MainWindow : Window
     {
         private static readonly DispatcherTimer licznik = new(); // odliczanie
-        private static readonly List<List<Button>> odzwierciedlenie = [], previewGrid = []; // konwersja grida, podglad nastepnego klocka
+        private static readonly List<List<Button>> odzwierciedlenie = [], // konwersja grida
+                                                   previewGrid = []; // podglad nastepnego klocka
         private static readonly List<int[][]> ksztalty = []; // lista ksztaltow
         bool isAlive, // czy klocek leci
             _lock = false, // czy wykonywana jest akcja
             resetTimer = false; // czy nalezy przywrocic licznik
-        int[][] klocek = [[]], klocek2 = [[]]; // dane o pozycji klocka, dane o pozycji nastepnego klocka
-        int[] wylosowany = []; // potrzebne do definiowania rotacji siatki
+        int[][] klocek = [[]], // dane o pozycji klocka
+                klocek2 = [[]]; // dane o pozycji nastepnego klocka
+        private readonly int[] koordynatySiatki = [], // potrzebne do definiowania rotacji siatki
+                               nrKlocka = [0, 0], // numer klocka - wybor gamy
+                               czas = [1250, 75]; // czas spadania klocka ([czas spadania, interwal ponawiania automatycznego spadania])
+        double mnoznik = 1; // mnoznik punktow
         private static readonly Random random = new(); // generator liczb losowych
+        private readonly SolidColorBrush[] kolory = [new SolidColorBrush(Colors.SkyBlue), // kolor tla
+                                                     new SolidColorBrush(Colors.CadetBlue)]; // kolor obramowania
+        private readonly SolidColorBrush[][] kolorystykaKlocka = [
+                                             [new SolidColorBrush(Color.FromRgb(127, 202, 195)), new SolidColorBrush(Color.FromRgb(0, 150, 136))],
+                                             [new SolidColorBrush(Color.FromRgb(249, 161, 54)), new SolidColorBrush(Color.FromRgb(244, 67, 54))],
+                                             [new SolidColorBrush(Color.FromRgb(159, 168, 218)), new SolidColorBrush(Color.FromRgb(63, 81, 181))],
+                                             [new SolidColorBrush(Color.FromRgb(255, 203, 127)), new SolidColorBrush(Color.FromRgb(255, 152, 0))],
+                                             [new SolidColorBrush(Color.FromRgb(255, 245, 157)), new SolidColorBrush(Color.FromRgb(255, 235, 59))],
+                                             [new SolidColorBrush(Color.FromRgb(197, 225, 164)), new SolidColorBrush(Color.FromRgb(139, 195, 74))],
+                                             [new SolidColorBrush(Color.FromRgb(205, 147, 215)), new SolidColorBrush(Color.FromRgb(156, 39, 176))]];
         public MainWindow()
         {
             InitializeComponent();
@@ -36,8 +51,8 @@ namespace tetris
                 {
                     Button przycisk = new()
                     {
-                        Background = new SolidColorBrush(Colors.SkyBlue),
-                        BorderBrush = new SolidColorBrush(Colors.CadetBlue),
+                        Background = kolory[0],
+                        BorderBrush = kolory[1],
                         BorderThickness = new Thickness(1)
                     };
                     this.siatka.Children.Add(przycisk);
@@ -46,7 +61,7 @@ namespace tetris
                     odzwierciedlenie[^1].Add(przycisk);
                 }
             }
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 10; i++) // [TEST]
                 odzwierciedlenie[i][^1].Background = new SolidColorBrush(Colors.White);
             for (int i = 0; i < 4; i++)
             {
@@ -55,8 +70,8 @@ namespace tetris
                 {
                     Button przycisk = new()
                     {
-                        Background = new SolidColorBrush(Colors.SkyBlue),
-                        BorderBrush = new SolidColorBrush(Colors.CadetBlue),
+                        Background = kolory[0],
+                        BorderBrush = kolory[1],
                         BorderThickness = new Thickness(1)
                     };
                     this.preview.Children.Add(przycisk);
@@ -66,7 +81,7 @@ namespace tetris
                 }
             }
             licznik.Tick += Czasomierz;
-            licznik.Interval = new TimeSpan(0, 0, 1);
+            licznik.Interval = new TimeSpan(0, 0, 0, 0, czas[0]);
             ksztalty.Add([[5, 1], [4, 1], [5, 0], [4, 0]]); // kwadrat
             ksztalty.Add([[6, 0], [5, 0], [4, 0], [3, 0]]); // slup
             ksztalty.Add([[4, 1], [3, 1], [5, 0], [4, 0]]); // lhh
@@ -79,12 +94,19 @@ namespace tetris
         }
         public void LosujPrzyszlyKlocek()
         {
-            klocek2 = ksztalty[random.Next(7)].Select(x => x.ToArray()).ToArray();
+            nrKlocka[1] = random.Next(7);
+            klocek2 = ksztalty[nrKlocka[1]].Select(x => x.ToArray()).ToArray();
             for (int i = 0; i < 4; i++)
-                for(int j = 0; j < 4; j++)
-                    previewGrid[i][j].Background = new SolidColorBrush(Colors.SkyBlue); // nowe przyciski nie dzialaja
+                for (int j = 0; j < 4; j++)
+                {
+                    previewGrid[i][j].Background = kolory[0]; // nowe przyciski nie dzialaja
+                    previewGrid[i][j].BorderBrush = kolory[1];
+                }
             for (int i = 0; i < klocek2.Length; i++)
-                previewGrid[klocek2[i][0] - 3][klocek2[i][1]].Background = new SolidColorBrush(Colors.White);
+            {
+                previewGrid[klocek2[i][0] - 3][klocek2[i][1]].Background = kolorystykaKlocka[nrKlocka[1]][0];
+                previewGrid[klocek2[i][0] - 3][klocek2[i][1]].BorderBrush = kolorystykaKlocka[nrKlocka[1]][1];
+            }
         }
         public void DodajPunkty(double ilosc) // opcjonalna
         {
@@ -93,28 +115,26 @@ namespace tetris
         public void ZastapKlocek()
         {
             // sprawdz, czy mozna usunac rzad; dodaj punkty i spowoduj upadek pozostalosci
-            double mnoznik = 1;
             for (int j = 0; j < odzwierciedlenie[0].Count; j++) {
                 bool rowIntegrity = true;
                 //int j = 0; // nie widac w for(k)
                 for (int i = 0; i < odzwierciedlenie.Count; i++)
-                    if(((SolidColorBrush)odzwierciedlenie[i][j].Background).Color != Colors.White)
+                    if(odzwierciedlenie[i][j].Background == kolory[0])
                         rowIntegrity = false;
                 if (rowIntegrity)
                 {
                     DodajPunkty(mnoznik * 1000);
                     for(int k = 0; k < odzwierciedlenie.Count; k++) // usuwanie rzedu
-                        odzwierciedlenie[k][j].Background = new SolidColorBrush(Colors.SkyBlue);
+                        odzwierciedlenie[k][j].Background = kolory[0];
                     for (int k = j - 1; k > -1; k--) // spadanie klockow wyzej; i - 1 = rzad nad usunietym
                         for (int l = 0; l < odzwierciedlenie.Count; l++)
-                        {
-                            List<List<Button>> a = odzwierciedlenie;
-                            if (((SolidColorBrush)odzwierciedlenie[l][k].Background).Color == Colors.White)
+                            if (odzwierciedlenie[l][k].Background != kolory[0])
                             {
-                                odzwierciedlenie[l][k].Background = new SolidColorBrush(Colors.SkyBlue);
-                                odzwierciedlenie[l][k + 1].Background = new SolidColorBrush(Colors.White); // klocek nizej; k = kolumny
+                                SolidColorBrush[] temp = [(SolidColorBrush)odzwierciedlenie[l][k].Background, (SolidColorBrush)odzwierciedlenie[l][k + 1].BorderBrush];
+                                odzwierciedlenie[l][k].Background = kolory[0];
+                                odzwierciedlenie[l][k + 1].Background = temp[0]; // klocek nizej; k = kolumny
+                                odzwierciedlenie[l][k + 1].BorderBrush = temp[1];
                             }
-                        }
                     mnoznik += 0.5;
                 }
                 else
@@ -122,8 +142,12 @@ namespace tetris
             }
             // zdefiniuj nastepny klocek
             klocek = klocek2.Select(x => x.ToArray()).ToArray();
+            nrKlocka[0] = nrKlocka[1];
             for (int i = 0; i < klocek.Length; i++)
-                odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background = new SolidColorBrush(Colors.White);
+            {
+                odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background = kolorystykaKlocka[nrKlocka[0]][0];
+                odzwierciedlenie[klocek[i][0]][klocek[i][1]].BorderBrush = kolorystykaKlocka[nrKlocka[0]][1];
+            }
             LosujPrzyszlyKlocek();
             isAlive = true;
             _lock = false;
@@ -132,7 +156,7 @@ namespace tetris
         {
             if (!resetTimer) // by nie wybuchlo
             {
-                licznik.Interval = new TimeSpan(0, 0, 0, 0, 200);
+                licznik.Interval = new TimeSpan(0, 0, 0, 0, czas[1]);
                 licznik.Stop();
                 licznik.Start();
                 resetTimer = true;
@@ -142,7 +166,7 @@ namespace tetris
         {
             if (resetTimer) // usprawnione odstepy czasowe
             {
-                licznik.Interval = new TimeSpan(0, 0, 1);
+                licznik.Interval = new TimeSpan(0, 0, 0, 0, czas[0]);
                 licznik.Stop();
                 licznik.Start();
                 resetTimer = false;
@@ -160,13 +184,11 @@ namespace tetris
             klocek[i][0] += cols;
             klocek[i][1] += rows;
 
-            SolidColorBrush kolor;
-            if (odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background == new SolidColorBrush(Colors.White))
-                kolor = new SolidColorBrush(Colors.White);
-            else
-                kolor = new SolidColorBrush(Colors.SkyBlue);
-            odzwierciedlenie[klocek[i][0] - cols][klocek[i][1] - rows].Background = kolor;
-            odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background = new SolidColorBrush(Colors.White);
+            SolidColorBrush[] temp = [(SolidColorBrush)odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background, (SolidColorBrush)odzwierciedlenie[klocek[i][0]][klocek[i][1]].BorderBrush];
+            odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background = odzwierciedlenie[klocek[i][0] - cols][klocek[i][1] - rows].Background;
+            odzwierciedlenie[klocek[i][0]][klocek[i][1]].BorderBrush = odzwierciedlenie[klocek[i][0] - cols][klocek[i][1] - rows].BorderBrush;
+            odzwierciedlenie[klocek[i][0] - cols][klocek[i][1] - rows].Background = temp[0];
+            odzwierciedlenie[klocek[i][0] - cols][klocek[i][1] - rows].BorderBrush = temp[1];
         }
         public bool SprawdzKompatybilnosc(int i, int cols, int rows, bool falling)
         {
@@ -178,7 +200,7 @@ namespace tetris
                 ZastapKlocek();
                 return true;
             }
-            if (((SolidColorBrush)odzwierciedlenie[klocek[i][0] + cols][klocek[i][1] + rows].Background).Color == Colors.White && !Znajdz(klocek[i][0] + cols, klocek[i][1] + rows))
+            if (((SolidColorBrush)odzwierciedlenie[klocek[i][0] + cols][klocek[i][1] + rows].Background).Color != kolory[0].Color && !Znajdz(klocek[i][0] + cols, klocek[i][1] + rows))
             {
                 if (falling)
                 {
