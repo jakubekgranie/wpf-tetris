@@ -1,0 +1,36 @@
+﻿<Window x:Class="tetris.Window1"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:tetris"
+        mc:Ignorable="d"
+        Title="Zapisy" Height="200" Width="278">
+    <Grid Margin="15" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel>
+            <Grid HorizontalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"></ColumnDefinition>
+                    <ColumnDefinition Width="auto"></ColumnDefinition>
+                    <ColumnDefinition Width="auto"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" FontFamily="Calibri" HorizontalAlignment="Center" FontSize="13">Plik zapisu:</Label>
+                <TextBox Grid.Column="1" Width="95" IsReadOnly="True" VerticalAlignment="Center" Margin="0, 0, 3, 0" Name="savefile"></TextBox>
+                <Button Grid.Column="2" Click="Button_Click">Otwórz</Button>
+            </Grid>
+            <Label FontFamily="Calibri" HorizontalAlignment="Center" FontSize="13">lub</Label>
+            <Grid HorizontalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"></ColumnDefinition>
+                    <ColumnDefinition Width="auto"></ColumnDefinition>
+                    <ColumnDefinition Width="auto"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" FontFamily="Calibri" HorizontalAlignment="Center" FontSize="13">Nowy zapis:</Label>
+                <TextBox Grid.Column="1" Width="95" IsReadOnly="True" VerticalAlignment="Center" Margin="0, 0, 3, 0" Name="loadfile"></TextBox>
+                <Button Grid.Column="2" Click="Button_Click_1">Zapisz</Button>
+            </Grid>
+            <TextBlock FontFamily="Calibri" HorizontalAlignment="Center" FontSize="11" TextAlignment="Center" Margin="0, 6, 0, 0" Name="feed">Oczekiwanie...</TextBlock>
+            <Button FontFamily="Calibri" HorizontalAlignment="Center" FontSize="11" Margin="0, 6, 0, 0" Click="Button_Click_2">Wyłącz zapis</Button>
+        </StackPanel>
+    </Grid>
+</Window>
