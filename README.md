@@ -38,12 +38,13 @@
 </ol>
 <h3>4. Controls</h3>
 <ul>
-  <li><kbd>A</kbd> - <i>Moves the current block to the left.</i></li>
-  <li><kbd>D</kbd> - <i>Moves the current block to the right.</i></li>
-  <li><kbd>S</kbd> - <i><b>Voluntary block descent.</b></i></li>
-  <li><kbd>Space</kbd> - <i><b>Volunatary block descent (full)</b> (TBD).</i></li>
+  <li><kbd>A</kbd> - <i>Move to the left</i></li>
+  <li><kbd>D</kbd> - <i>Move to the right</i></li>
+  <li><kbd>S</kbd> - <i><b>Voluntary block descent</b></i></li>
+  <li><kbd>Space</kbd> - <i><b>Voluntary block descent (full)</b></i></li>
   <li><kbd>Z</kbd> - <i>Swap (TBD)</i></li>
-  <li><kbd>P</kbd> - <i>Reset (TBD)</i></li>
+  <li><kbd>F5</kbd> - <i>View save manager</i></li>
+  <li><kbd>F9</kbd> - <i>Reset (TBD)</i></li>
 </ul>
 <h3>5. Internal documentation excerpts</h3>
 <p>TBD</p>
