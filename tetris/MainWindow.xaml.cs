@@ -159,7 +159,7 @@ namespace tetris
                         rowIntegrity = false;
                 if (rowIntegrity)
                 {
-                    DodajPunkty(1000);
+                    DodajPunkty(500);
                     for(int k = 0; k < odzwierciedlenie.Count; k++) // usuwanie rzedu
                         odzwierciedlenie[k][j].Background = kolory[0];
                     for (int k = j - 1; k > -1; k--) // spadanie klockow wyzej; i - 1 = rzad nad usunietym
@@ -178,7 +178,7 @@ namespace tetris
             // zdefiniuj nastepny klocek
             if (punkty[0] >= punkty[1])
             {
-                for (; punkty[0] >= punkty[1]; punkty[1] += 1250)
+                for (; punkty[0] >= punkty[1]; punkty[1] += 1000 + 200 * punkty[3])
                     punkty[3]++;
                 if (czas[0] != 200)
                     czas[0] = 1250 - 150 * (int)punkty[3];
