@@ -3,22 +3,22 @@
 <h3>1. Introduction</h3>
 <p>"wpf-tetris" is a Tetris game implementation made by <a href="https://github.com/jakubekgranie">jakubekgranie on GitHub</a>, issued as a school assignment. The project features <b>C#</b> and <b>XAML</b> languages. The user interface framework used is WPF (Windows Presentation Foundation).</p>
 <h3>2. The game</h3>
-<p>The objective of the player is to <i>gather as many points as possible until the game ends by overflow</i>. On a grid of chosen dimensions, they must <i>align the incoming shapes into horizontal lines</i> by <i>rotating</i>, <i>swapping</i> and <i>horizontal movement</i>. The more score you have, the harder the game becomes, but fortune favors the bold...</p>
+<p>The objective of the player is to <i>gather as many points as possible until the game ends by overflow</i>. On a grid of chosen dimensions, they must <i>align the incoming shapes into horizontal lines</i> by <i>rotating</i>, <i>swapping</i> and <i>vertical movement</i>. The more score you have, the harder the game becomes, but fortune favors the bold...</p>
 <h3>3. The level system</h3>
 <ol>
   <li>
       <h4>The formula</h4>
       <p>The points are added using the formula below:</p>
       <kbd>points = previous + amount * horizontalMultiplier * level</kbd>,
-      <p>where <kbd>previous</kbd> equals the past total score, <kbd>amount</kbd> is the unparsed amount of points, <kbd>horizontalMultiplier</kbd> is a temporary multiplier growing with consequent horizontal lines detected and <kbd>level</kbd> is responsible for level achievement gratification.</p>
+      <p>where <kbd>previous</kbd> equals the past total score, <kbd>amount</kbd> is the unparsed amount of points, <kbd>horizontalMultiplier</kbd> is a temporary multiplier growing with consequent horizontal lines detected in one scan and <kbd>level</kbd> is responsible for level achievement gratification.</p>
   </li>
   <li>
       <h4>Acquisition</h4>
       <p>How to get points (unparsed):</p>
       <ul>
         <li>horizontal line creation - <b>500 points</b></li>
-        <li>Voluntary block descent - <b>2 points (TBD)</b></li>
-        <li>Voluntary block descent (full) - <b>2 * spaces traversed points (TBD)</b></li>
+        <li>Voluntary block descent - <b>2 points</b></li>
+        <li>Voluntary block descent (full) - <b>2 * empty spaces traversed points</b></li>
       </ul>
   </li>
   <li>
@@ -33,7 +33,7 @@
       <kbd>time = 1250 - 150 * level</kbd>,
       <p>where <kbd>level</kbd> is self-explanatory.
       <br>
-      The unit of time is <b>ms</b> (<b>miliseconds</b>).</p>
+      The unit of time is <b>ms</b> (<b>milliseconds</b>).</p>
   </li>
 </ol>
 <h3>4. Controls</h3>
