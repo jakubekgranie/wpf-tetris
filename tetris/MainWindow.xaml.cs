@@ -18,7 +18,8 @@ namespace tetris
         private bool isAlive = false, // czy klocek leci
                     _lock = true, // czy wykonywana jest akcja
                     resetTimer = false, // czy nalezy przywrocic licznik
-                    GOTCheck = false; // czy gra zakonczyla sie
+                    GOTCheck = false, // czy gra zakonczyla sie
+                    hasBeenChanged = false; // czy zamiana jest mozliwa
         private readonly int[][] poczatkoweSiatki = [[4, 0, 2], // kwadrat
                                                     [3, 0, 4], // slup
                                                     [3, 0, 3], // lhh
@@ -148,9 +149,10 @@ namespace tetris
                 previewGrid[klocek2[i][0] - 3][klocek2[i][1]].BorderBrush = kolorystykaKlocka[nrKlocka[1]][1];
             }
         }
-        private void LosujPrzyszlyKlocek()
+        private void LosujPrzyszlyKlocek(bool zamien = false)
         {
-            nrKlocka[1] = random.Next(7);
+            if(!zamien)
+                nrKlocka[1] = random.Next(7);
             koordynatySiatki[1] = (int[])poczatkoweSiatki[nrKlocka[1]].Clone();
             klocek2 = ksztalty[nrKlocka[1]].Select(x => x.ToArray()).ToArray();
             rotacja[1] = 0;
@@ -178,19 +180,19 @@ namespace tetris
                 resetTimer = true;
             }
         }
-        private void ZastapKlocek()
+        private void ZastapKlocek(bool zamien = false)
         {
             // sprawdz, czy mozna usunac rzad; dodaj punkty i spowoduj upadek pozostalosci
             for (int j = 0; j < odzwierciedlenie[0].Count; j++) {
                 bool rowIntegrity = true;
                 //int j = 0; // nie widac w for(k)
                 for (int i = 0; i < odzwierciedlenie.Count; i++)
-                    if(odzwierciedlenie[i][j].Background == kolory[0])
+                    if (odzwierciedlenie[i][j].Background == kolory[0])
                         rowIntegrity = false;
                 if (rowIntegrity)
                 {
                     DodajPunkty(500);
-                    for(int k = 0; k < odzwierciedlenie.Count; k++) // usuwanie rzedu
+                    for (int k = 0; k < odzwierciedlenie.Count; k++) // usuwanie rzedu
                         odzwierciedlenie[k][j].Background = kolory[0];
                     for (int k = j - 1; k > -1; k--) // spadanie klockow wyzej; i - 1 = rzad nad usunietym
                         for (int l = 0; l < odzwierciedlenie.Count; l++)
@@ -228,15 +230,17 @@ namespace tetris
                     GOT.Start();
                     return;
                 }
-            nrKlocka[0] = nrKlocka[1];
-            koordynatySiatki[0] = koordynatySiatki[1];
-            rotacja[0] = rotacja[1];
+            if (!zamien) { 
+                hasBeenChanged = false;
+                nrKlocka[0] = nrKlocka[1];
+                koordynatySiatki[0] = koordynatySiatki[1];
+            }
             for (int i = 0; i < klocek.Length; i++)
             {
                 odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background = kolorystykaKlocka[nrKlocka[0]][0];
                 odzwierciedlenie[klocek[i][0]][klocek[i][1]].BorderBrush = kolorystykaKlocka[nrKlocka[0]][1];
             }
-            LosujPrzyszlyKlocek();
+            LosujPrzyszlyKlocek(zamien);
             isAlive = true;
             _lock = false;
         }
@@ -354,10 +358,6 @@ namespace tetris
                 // sprawdz, czy mozna przesunac klocek
                 Przemiesc(reverse, falling, space, cols, rows, manual);
             }
-        }
-        private void Zmien()
-        {
-
         }
         private void Resetuj(bool force = false)
         {
@@ -648,20 +648,20 @@ namespace tetris
                             tempKlocek[i] = segment;
                             wasSegmentUsed[segmentMarked] = true;
                         }
-                        for (int i = 0; i < koordynatySiatki[0][2]; i++)
-                            for (int j = 0; j < koordynatySiatki[0][2]; j++)
-                                if (((SolidColorBrush)rotationMatrix[i][j].Background).Color != kolory[0].Color && ((SolidColorBrush)tempMatrix[i][j].Background).Color == kolorystykaKlocka[nrKlocka[0]][0].Color) // nadpisanie istniejacej wartosci
+                        for(int i = 0; i < klocek.Length; i++)
+                            if(((SolidColorBrush)rotationMatrix[tempKlocek[i][0] - koordynatySiatki[0][0]][tempKlocek[i][1] - koordynatySiatki[0][1]].Background).Color != kolory[0].Color)
+                            {
+                                bool isCurrentBlock = false;
+                                for (int k = 0; k < tempKlocek.Length; k++)
+                                    if (oldKlocek[k][0] == tempKlocek[i][0] && oldKlocek[k][1] == tempKlocek[i][1])
+                                        isCurrentBlock = true;
+                                if (!isCurrentBlock)
                                 {
-                                    bool isCurrentBlock = false;
-                                    for(int k = 0; k < klocek.Length; k++)
-                                        if (klocek[k][0] - koordynatySiatki[0][0] == i && klocek[k][1] - koordynatySiatki[0][1] == j)
-                                            isCurrentBlock = true;
-                                    if (!isCurrentBlock)
-                                    {
-                                        _lock = false;
-                                        return;
-                                    }
+                                    klocek = oldKlocek;
+                                    _lock = false;
+                                    return;
                                 }
+                            }
                         klocek = tempKlocek;
                         for(int i = 0; i < klocek.Length; i++)
                         {
@@ -675,6 +675,25 @@ namespace tetris
                         }
                     }
                 }
+                _lock = false;
+            }
+        }
+        private void Zmien()
+        {
+            if(!_lock && !hasBeenChanged)
+            {
+                _lock = hasBeenChanged = true;
+                for(int i = 0; i < klocek.Length; i++)
+                {
+                    odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background = kolory[0];
+                    odzwierciedlenie[klocek[i][0]][klocek[i][1]].BorderBrush = kolory[1];
+                }
+                int[][] temp = klocek2.Select(x => x.ToArray()).ToArray();
+                (nrKlocka[1], nrKlocka[0]) = (nrKlocka[0], nrKlocka[1]);
+                int[] temp2 = (int[])koordynatySiatki[0].Clone();
+                koordynatySiatki[0] = (int[])koordynatySiatki[1].Clone();
+                koordynatySiatki[1] = temp2;
+                ZastapKlocek(true);
                 _lock = false;
             }
         }
@@ -706,6 +725,9 @@ namespace tetris
                     break;
                 case Key.Left:
                     Rotacja(true);
+                    break;
+                case Key.Z:
+                    Zmien();
                     break;
             }
         }
