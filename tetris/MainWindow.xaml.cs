@@ -160,7 +160,7 @@ namespace tetris
         }
         private void DodajPunkty(double ilosc) // opcjonalna
         {
-            punkty[0] += ilosc * punkty[2] * punkty[3];
+            punkty[0] += Math.Floor(ilosc * punkty[2] * (1 + 0.2 * punkty[3]));
             iloscPunktow.Content = punkty[0];
         }
         private void ResetujCzasomierz()
@@ -192,14 +192,18 @@ namespace tetris
                 if (rowIntegrity)
                 {
                     DodajPunkty(500);
-                    for (int k = 0; k < odzwierciedlenie.Count; k++) // usuwanie rzedu
+                    for (int k = 0; k < odzwierciedlenie.Count; k++)
+                    { // usuwanie rzedu
                         odzwierciedlenie[k][j].Background = kolory[0];
+                        odzwierciedlenie[k][j].BorderBrush = kolory[1];
+                    }
                     for (int k = j - 1; k > -1; k--) // spadanie klockow wyzej; i - 1 = rzad nad usunietym
                         for (int l = 0; l < odzwierciedlenie.Count; l++)
                             if (odzwierciedlenie[l][k].Background != kolory[0])
                             {
-                                SolidColorBrush[] temp = [(SolidColorBrush)odzwierciedlenie[l][k].Background, (SolidColorBrush)odzwierciedlenie[l][k + 1].BorderBrush];
+                                SolidColorBrush[] temp = [(SolidColorBrush)odzwierciedlenie[l][k].Background, (SolidColorBrush)odzwierciedlenie[l][k].BorderBrush];
                                 odzwierciedlenie[l][k].Background = kolory[0];
+                                odzwierciedlenie[l][k].BorderBrush = kolory[1];
                                 odzwierciedlenie[l][k + 1].Background = temp[0]; // klocek nizej; k = kolumny
                                 odzwierciedlenie[l][k + 1].BorderBrush = temp[1];
                             }
@@ -212,10 +216,10 @@ namespace tetris
             {
                 for (; punkty[0] >= punkty[1]; punkty[1] += 1000 + 200 * punkty[3])
                     punkty[3]++;
-                if (czas[0] != 200)
+                if (czas[0] != 70)
                     czas[0] = 1250 - 150 * (int)punkty[3];
-                if (czas[0] < 200)
-                    czas[0] = 200;
+                if (czas[0] < 70)
+                    czas[0] = 70;
                 poziom.Content = punkty[3];
                 WypelnijKolorem();
                 LosujPrzyszlyKlocek();
@@ -594,7 +598,7 @@ namespace tetris
                 else
                 {
                     List<List<Button>> rotationMatrix = [], tempMatrix = []; // rotacja z aliasingiem
-                    if (koordynatySiatki[0][0] + koordynatySiatki[0][2] > odzwierciedlenie.Count || koordynatySiatki[0][1] + koordynatySiatki[0][2] > odzwierciedlenie[0].Count)
+                    if (koordynatySiatki[0][0] + koordynatySiatki[0][2] > odzwierciedlenie.Count || koordynatySiatki[0][1] + koordynatySiatki[0][2] > odzwierciedlenie[0].Count || koordynatySiatki[0][0] < 0 || koordynatySiatki[0][1] > odzwierciedlenie.Count)
                     { // zbyt malo przestrzeni
                         _lock = false;
                         return;
