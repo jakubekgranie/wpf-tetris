@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,22 +16,23 @@ namespace tetris
                                                    previewGrid = []; // podglad nastepnego klocka
         private static readonly List<int[][]> ksztalty = []; // lista ksztaltow
         private bool isAlive = false, // czy klocek leci
-            _lock = true, // czy wykonywana jest akcja
-            resetTimer = false, // czy nalezy przywrocic licznik
-            GOTCheck = false; // czy gra zakonczyla sie
+                    _lock = true, // czy wykonywana jest akcja
+                    resetTimer = false, // czy nalezy przywrocic licznik
+                    GOTCheck = false; // czy gra zakonczyla sie
+        private readonly int[][] poczatkoweSiatki = [[4, 0, 2], // kwadrat
+                                                    [3, 0, 4], // slup
+                                                    [3, 0, 3], // lhh
+                                                    [3, 0, 3], // hll
+                                                    [4, 0, 3], // 3-1
+                                                    [4, 0, 3], // 1-3
+                                                    [3, 0, 3]]; // szpic
         private int[][] koordynatySiatki = [[0, 0, 0], [0, 0, 0]], // potrzebne do definiowania rotacji siatki i zamiany klocka
-                klocek = [[]], // dane o pozycji klocka
-                klocek2 = [[]], // dane o pozycji nastepnego klocka
-                poczatkoweSiatki = [[4, 0, 2], // kwadrat
-                                    [3, 0, 4], // slup
-                                    [3, 0, 3], // lhh
-                                    [3, 0, 3], // hll
-                                    [4, 0, 3], // 3-1
-                                    [4, 0, 3], // 1-3
-                                    [3, 0, 3]]; // szpic
+                        klocek = [[]], // dane o pozycji klocka
+                        klocek2 = [[]]; // dane o pozycji nastepnego klocka
+        private readonly int[] rotacja = [0, 0]; // do rotacji
         private int[] nrKlocka = [0, 0], // numer klocka - wybor gamy
-                               czas = [1250, 75]; // czas spadania klocka ([czas spadania, interwal ponawiania automatycznego spadania])
-        private int rzadGOT = 0; // potrzebne do animacji końcowej
+                      czas = [1250, 75]; // czas spadania klocka ([czas spadania, interwal ponawiania automatycznego spadania])
+        private int rzadGOT; // potrzebne do animacji końcowej
         private double[] punkty = [0, 2000, 1, 1]; // punktacja ([punkty, do nastepnego poziomu, mnoznik, poziom])
         private static readonly Random random = new(); // generator liczb losowych
         private SolidColorBrush[] kolory = []; // kolor obramowania
@@ -85,15 +87,38 @@ namespace tetris
             WypelnijKolorem();
             licznik.Tick += Czasomierz;
             licznik.Interval = new TimeSpan(0, 0, 0, 0, czas[0]);
+            GOT.Tick += (s, e) => {
+                if (rzadGOT == -1)
+                {
+                    GOTCheck = true;
+                    GOT.Stop();
+                    for (int i = 0; i < 4; i++)
+                        for (int j = 0; j < 4; j++)
+                        {
+                            previewGrid[i][j].Background = kolorystykaKlocka[12][0];
+                            previewGrid[i][j].BorderBrush = kolorystykaKlocka[12][1];
+                        }
+                    previewBorder.BorderBrush = extBorder.BorderBrush = kolorystykaKlocka[12][1];
+                    _lock = false;
+                    return;
+                }
+                for (int i = 0; i < odzwierciedlenie.Count; i++)
+                {
+                    odzwierciedlenie[i][rzadGOT].Background = kolorystykaKlocka[12][0];
+                    odzwierciedlenie[i][rzadGOT].BorderBrush = kolorystykaKlocka[12][1];
+                }
+                rzadGOT--;
+            };
+            GOT.Interval = new TimeSpan(0, 0, 0, 0, 100);
             pomocniczy.Tick += Zapisy;
             pomocniczy.Interval = new TimeSpan(0, 0, 0, 0, 1);
             ksztalty.Add([[5, 1], [4, 1], [5, 0], [4, 0]]); // kwadrat
-            ksztalty.Add([[6, 0], [5, 0], [4, 0], [3, 0]]); // slup
+            ksztalty.Add([[6, 1], [5, 1], [4, 1], [3, 1]]); // slup
             ksztalty.Add([[4, 1], [3, 1], [5, 0], [4, 0]]); // lhh
-            ksztalty.Add([[4, 1], [3, 1], [5, 0], [4, 0]]); // hll
-            ksztalty.Add([[5, 2], [4, 2], [4, 1], [4, 0]]); // 3-1
-            ksztalty.Add([[5, 2], [5, 1], [5, 0], [4, 0]]); // 1-3
-            ksztalty.Add([[4, 1], [5, 0], [4, 0], [3, 0]]); // szpic
+            ksztalty.Add([[5, 1], [4, 1], [4, 0], [3, 0]]); // hll
+            ksztalty.Add([[6, 1], [6, 0], [5, 1], [4, 1]]); // 3-1
+            ksztalty.Add([[6, 1], [5, 1], [4, 1], [4, 0]]); // 1-3
+            ksztalty.Add([[5, 1], [4, 1], [3, 1], [4, 0]]); // szpic
             LosujPrzyszlyKlocek();
             ZastapKlocek();
             _lock = false;
@@ -109,11 +134,8 @@ namespace tetris
                     odzwierciedlenie[i][j].BorderBrush = kolory[1];
                 }
         }
-        private void LosujPrzyszlyKlocek()
+        private void OdswiezPodglad()
         {
-            nrKlocka[1] = random.Next(7);
-            koordynatySiatki[1] = poczatkoweSiatki[nrKlocka[1]];
-            klocek2 = ksztalty[nrKlocka[1]].Select(x => x.ToArray()).ToArray();
             for (int i = 0; i < 4; i++)
                 for (int j = 0; j < 4; j++)
                 {
@@ -125,6 +147,14 @@ namespace tetris
                 previewGrid[klocek2[i][0] - 3][klocek2[i][1]].Background = kolorystykaKlocka[nrKlocka[1]][0];
                 previewGrid[klocek2[i][0] - 3][klocek2[i][1]].BorderBrush = kolorystykaKlocka[nrKlocka[1]][1];
             }
+        }
+        private void LosujPrzyszlyKlocek()
+        {
+            nrKlocka[1] = random.Next(7);
+            koordynatySiatki[1] = (int[])poczatkoweSiatki[nrKlocka[1]].Clone();
+            klocek2 = ksztalty[nrKlocka[1]].Select(x => x.ToArray()).ToArray();
+            rotacja[1] = 0;
+            OdswiezPodglad();
         }
         private void DodajPunkty(double ilosc) // opcjonalna
         {
@@ -195,33 +225,12 @@ namespace tetris
                 if (((SolidColorBrush)odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background).Color != kolory[0].Color)
                 {
                     licznik.Stop();
-                    GOT.Interval = new TimeSpan(0, 0, 0, 0, 350);
-                    GOT.Tick += (s, e) => {
-                        if (rzadGOT == -1)
-                        {
-                            GOTCheck = true;
-                            GOT.Stop();
-                            for (int i = 0; i < 4; i++)
-                                for (int j = 0; j < 4; j++) {
-                                    previewGrid[i][j].Background = kolorystykaKlocka[12][0];
-                                    previewGrid[i][j].BorderBrush = kolorystykaKlocka[12][1];
-                                }
-                            previewBorder.BorderBrush = extBorder.BorderBrush = kolorystykaKlocka[12][1];
-                            _lock = false;
-                            return;
-                        }
-                        for (int i = 0; i < odzwierciedlenie.Count; i++)
-                        {
-                            odzwierciedlenie[i][rzadGOT].Background = kolorystykaKlocka[12][0];
-                            odzwierciedlenie[i][rzadGOT].BorderBrush = kolorystykaKlocka[12][1];
-                        }
-                        rzadGOT--;
-                    };
                     GOT.Start();
                     return;
                 }
             nrKlocka[0] = nrKlocka[1];
             koordynatySiatki[0] = koordynatySiatki[1];
+            rotacja[0] = rotacja[1];
             for (int i = 0; i < klocek.Length; i++)
             {
                 odzwierciedlenie[klocek[i][0]][klocek[i][1]].Background = kolorystykaKlocka[nrKlocka[0]][0];
@@ -349,6 +358,32 @@ namespace tetris
         private void Zmien()
         {
 
+        }
+        private void Resetuj(bool force = false)
+        {
+            if (!_lock)
+            {
+                _lock = true;
+                if (force || MessageBox.Show("Czy na pewno chcesz zresetować grę?", "Resetowanie gry", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    licznik.Stop();
+                    resetTimer = false;
+                    koordynatySiatki = [[0, 0, 0], [0, 0, 0]];
+                    nrKlocka = [0, 0];
+                    czas = [1250, 75];
+                    licznik.Interval = new TimeSpan(0, 0, 0, 0, czas[0]);
+                    punkty = [0, 2000, 1, 1];
+                    DodajPunkty(0);
+                    WypelnijKolorem();
+                    LosujPrzyszlyKlocek();
+                    ZastapKlocek();
+                    extBorder.BorderBrush = previewBorder.BorderBrush = kolory[1];
+                    _lock = GOTCheck = false;
+                    rzadGOT = odzwierciedlenie[0].Count - 1;
+                    licznik.Start();
+                }
+                _lock = false;
+            }
         }
         private void Zapisy(object s, EventArgs e)
         {
@@ -488,6 +523,7 @@ namespace tetris
                                     odzwierciedlenie[j][i].Background = kolorystykaKlocka[pole][0];
                                     odzwierciedlenie[j][i].BorderBrush = kolorystykaKlocka[pole][1];
                                 }
+                            OdswiezPodglad();
                             ResetujCzasomierz();
                         }
                         catch (Exception ex)
@@ -534,6 +570,8 @@ namespace tetris
                         catch (Exception ex)
                         {
                             MessageBox.Show("Błąd podczas kreacji pliku:\n" + ex.Message, "Błąd zapisu", new(), MessageBoxImage.Warning);
+                            _lock = false;
+                            Resetuj();
                         }
                         break;
                 }
@@ -542,6 +580,103 @@ namespace tetris
             }
             else
                 pomocniczy.Start();
+        }
+        private void Rotacja(bool left = false)
+        {
+            if (!_lock)
+            {
+                _lock = true;
+                if (nrKlocka[0] == 0)
+                {
+                    _lock = false;
+                    return;
+                }
+                else
+                {
+                    List<List<Button>> rotationMatrix = [], tempMatrix = []; // rotacja z aliasingiem
+                    if (koordynatySiatki[0][0] + koordynatySiatki[0][2] > odzwierciedlenie.Count || koordynatySiatki[0][1] + koordynatySiatki[0][2] > odzwierciedlenie[0].Count)
+                    { // zbyt malo przestrzeni
+                        _lock = false;
+                        return;
+                    }
+                    for (int i = 0; i < koordynatySiatki[0][2]; i++)
+                    {
+                        rotationMatrix.Add([]);
+                        for (int j = 0; j < koordynatySiatki[0][2]; j++)
+                            rotationMatrix[i].Add(odzwierciedlenie[koordynatySiatki[0][0] + i][koordynatySiatki[0][1] + j]);
+                    }
+                    for (int i = 0; i < koordynatySiatki[0][2]; i++)
+                    {
+                        tempMatrix.Add([]);
+                        for (int j = 0; j < koordynatySiatki[0][2]; j++)
+                            tempMatrix[i].Add(new());
+                    }
+                    int iterations = 1;
+                    if (!left)
+                        iterations = 3;
+                    for (int _i = 0; _i < iterations; _i++)
+                    {
+                        int[][] oldKlocek = [[], [], [], []];
+                        for (int i = 0; i < klocek.Length; i++) // deep copy
+                            oldKlocek[i] = (int[])klocek[i].Clone();
+                        for (int i = 0; i < koordynatySiatki[0][2]; i++)
+                            for (int j = 0; j < koordynatySiatki[0][2]; j++)
+                            {
+                                tempMatrix[j][koordynatySiatki[0][2] - 1 - i].Background = rotationMatrix[i][j].Background;
+                                tempMatrix[j][koordynatySiatki[0][2] - 1 - i].BorderBrush = rotationMatrix[i][j].BorderBrush;
+                                if (((SolidColorBrush)tempMatrix[j][koordynatySiatki[0][2] - 1 - i].Background).Color == kolorystykaKlocka[nrKlocka[0]][0].Color)
+                                    for (int k = 0; k < klocek.Length; k++)
+                                        if (klocek[k][0] == koordynatySiatki[0][0] + i && klocek[k][1] == koordynatySiatki[0][1] + j)
+                                        {
+                                            klocek[k][0] = koordynatySiatki[0][0] + j;
+                                            klocek[k][1] = koordynatySiatki[0][1] + koordynatySiatki[0][2] - 1 - i;
+                                            break;
+                                        }
+                            }
+                        int[][] tempKlocek = [[0, 0], [0, 0], [0, 0], [0, 0]]; // sortowanie
+                        bool[] wasSegmentUsed = [false, false, false, false];
+                        for (int i = 0; i < klocek.Length; i++)
+                        {
+                            int[] segment = [int.MinValue, int.MinValue];
+                            int segmentMarked = 0;
+                            for (int j = 0; j < klocek.Length; j++)
+                                if (!wasSegmentUsed[j] && (klocek[j][0] >= segment[0] || (klocek[j][0] == segment[0] && klocek[j][1] > segment[1])))
+                                {
+                                    segment = [klocek[j][0], klocek[j][1]];
+                                    segmentMarked = j;
+                                }
+                            tempKlocek[i] = segment;
+                            wasSegmentUsed[segmentMarked] = true;
+                        }
+                        for (int i = 0; i < koordynatySiatki[0][2]; i++)
+                            for (int j = 0; j < koordynatySiatki[0][2]; j++)
+                                if (((SolidColorBrush)rotationMatrix[i][j].Background).Color != kolory[0].Color && ((SolidColorBrush)tempMatrix[i][j].Background).Color == kolorystykaKlocka[nrKlocka[0]][0].Color) // nadpisanie istniejacej wartosci
+                                {
+                                    bool isCurrentBlock = false;
+                                    for(int k = 0; k < klocek.Length; k++)
+                                        if (klocek[k][0] - koordynatySiatki[0][0] == i && klocek[k][1] - koordynatySiatki[0][1] == j)
+                                            isCurrentBlock = true;
+                                    if (!isCurrentBlock)
+                                    {
+                                        _lock = false;
+                                        return;
+                                    }
+                                }
+                        klocek = tempKlocek;
+                        for(int i = 0; i < klocek.Length; i++)
+                        {
+                            rotationMatrix[oldKlocek[i][0] - koordynatySiatki[0][0]][oldKlocek[i][1] - koordynatySiatki[0][1]].Background = kolory[0];
+                            rotationMatrix[oldKlocek[i][0] - koordynatySiatki[0][0]][oldKlocek[i][1] - koordynatySiatki[0][1]].BorderBrush = kolory[1];
+                        }
+                        for (int i = 0; i < klocek.Length; i++)
+                        {
+                            rotationMatrix[klocek[i][0] - koordynatySiatki[0][0]][klocek[i][1] - koordynatySiatki[0][1]].Background = kolorystykaKlocka[nrKlocka[0]][0];
+                            rotationMatrix[klocek[i][0] - koordynatySiatki[0][0]][klocek[i][1] - koordynatySiatki[0][1]].BorderBrush = kolorystykaKlocka[nrKlocka[0]][1];
+                        }
+                    }
+                }
+                _lock = false;
+            }
         }
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
@@ -564,31 +699,13 @@ namespace tetris
                     Core(0, 1, false, true, true, true); // piaty atrybut do rekurencji
                     break;
                 case Key.F9:
-                    if (!_lock)
-                    {
-                        _lock = true;
-                        if (MessageBox.Show("Czy na pewno chcesz zresetować grę?", "Resetowanie gry", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-                        {
-                            licznik.Stop();
-                            resetTimer = false;
-                            koordynatySiatki = [[0, 0, 0], [0, 0, 0]];
-                            nrKlocka = [0, 0];
-                            czas = [1250, 75];
-                            licznik.Interval = new TimeSpan(0, 0, 0, 0, czas[0]);
-                            punkty = [0, 2000, 1, 1];
-                            rzadGOT = 0;
-                            DodajPunkty(0);
-                            WypelnijKolorem();
-                            LosujPrzyszlyKlocek();
-                            ZastapKlocek();
-                            extBorder.BorderBrush = previewBorder.BorderBrush = kolory[1];
-                            _lock = GOTCheck = false;
-                            rzadGOT = 0;
-                            licznik.Start();
-                            break;
-                        }
-                        _lock = false;
-                    }
+                    Resetuj();
+                    break;
+                case Key.Right:
+                    Rotacja();
+                    break;
+                case Key.Left:
+                    Rotacja(true);
                     break;
             }
         }
