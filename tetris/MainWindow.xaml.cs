@@ -160,7 +160,7 @@ namespace tetris
         }
         private void DodajPunkty(double ilosc) // opcjonalna
         {
-            punkty[0] += Math.Floor(ilosc * punkty[2] * (1 + 0.2 * punkty[3]));
+            punkty[0] += Math.Floor(ilosc * punkty[2] * 1.2 * punkty[3]);
             iloscPunktow.Content = punkty[0];
         }
         private void ResetujCzasomierz()
@@ -214,7 +214,7 @@ namespace tetris
             // zdefiniuj nastepny klocek
             if (punkty[0] >= punkty[1])
             {
-                for (; punkty[0] >= punkty[1]; punkty[1] += 1000 + 200 * punkty[3])
+                for (; punkty[0] >= punkty[1]; punkty[1] += 1000 + 200 * 1.2 * punkty[3])
                     punkty[3]++;
                 if (czas[0] != 70)
                     czas[0] = 1250 - 150 * (int)punkty[3];
