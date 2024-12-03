@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -127,7 +126,7 @@ namespace tetris
         }
         private void WypelnijKolorem()
         {
-            kolory = kolorystykaKlocka[6 + (int)punkty[3] % (kolorystykaKlocka.Length - 6)];
+            kolory = kolorystykaKlocka[6 + (int)punkty[3] % 5];
             for(int i = 0; i < odzwierciedlenie.Count; i++) 
                 for(int j = 0; j < odzwierciedlenie[0].Count; j++)
                 {
@@ -160,7 +159,7 @@ namespace tetris
         }
         private void DodajPunkty(double ilosc) // opcjonalna
         {
-            punkty[0] += Math.Floor(ilosc * punkty[2] * 1.2 * punkty[3]);
+            punkty[0] += Math.Floor(ilosc * punkty[2] + 0.6 * punkty[3]);
             iloscPunktow.Content = punkty[0];
         }
         private void ResetujCzasomierz()
@@ -214,7 +213,7 @@ namespace tetris
             // zdefiniuj nastepny klocek
             if (punkty[0] >= punkty[1])
             {
-                for (; punkty[0] >= punkty[1]; punkty[1] += 1000 + 200 * 1.2 * punkty[3])
+                for (; punkty[0] >= punkty[1]; punkty[1] += 1000 + 400 * 1.8 * punkty[3])
                     punkty[3]++;
                 if (czas[0] != 70)
                     czas[0] = 1250 - 150 * (int)punkty[3];
@@ -327,7 +326,7 @@ namespace tetris
             koordynatySiatki[0][0] += cols;
             koordynatySiatki[0][1] += rows;
             if (manual)
-                DodajPunkty(2);
+                DodajPunkty(0.4);
             if (space)
                 Przemiesc(reverse, falling, space, cols, rows, manual); // rekurencja
             _lock = false;
