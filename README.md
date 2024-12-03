@@ -9,22 +9,22 @@
   <li>
       <h4>The formula</h4>
       <p>The points are added using the formula below:</p>
-      <kbd>points = previous + amount * horizontalMultiplier * level</kbd>,
-      <p>where <kbd>previous</kbd> equals the past total score, <kbd>amount</kbd> is the unparsed amount of points, <kbd>horizontalMultiplier</kbd> is a temporary multiplier growing with consequent horizontal lines detected in one scan and <kbd>level</kbd> is responsible for level achievement gratification.</p>
+      <kbd>points = previous + amount * verticalMultiplier + 0.6 * level</kbd>,
+      <p>where <kbd>previous</kbd> equals the past total score, <kbd>amount</kbd> is the unparsed amount of points, <kbd>verticalMultiplier</kbd> is a temporary multiplier growing with consequent horizontal lines detected in one scan and <kbd>level</kbd> is responsible for level achievement gratification.</p>
   </li>
   <li>
       <h4>Acquisition</h4>
       <p>How to get points (unparsed):</p>
       <ul>
         <li>horizontal line creation - <b>500 points</b></li>
-        <li>Voluntary block descent - <b>2 points</b></li>
-        <li>Voluntary block descent (full) - <b>2 * empty spaces traversed points</b></li>
+        <li>Voluntary block descent - <b>0.4 points</b></li>
+        <li>Voluntary block descent (full) - <b>0.4 * empty spaces traversed points</b></li>
       </ul>
   </li>
   <li>
       <h4>Level thresholds</h4>
       <p>Each level threshold can be calculated using the formula below:</p>
-      <kbd>threshold = previous + n(1000 + 200 * level)</kbd>,
+      <kbd>threshold = previous + n(1000 + 400 * 1.8 * level)</kbd>,
       <p>where <kbd>previous</kbd> is the previous threshold, <kbd>n</kbd> stands for the number of iterations and <kbd>level</kbd> is self-explanatory.</p>
   </li>
   <li>
@@ -44,13 +44,11 @@
   <li><kbd><-</kbd> - <i>Rotate to the left</i></li>
   <li><kbd>S</kbd> - <i><b>Voluntary block descent</b></i></li>
   <li><kbd>Space</kbd> - <i><b>Voluntary block descent (full)</b></i></li>
-  <li><kbd>Z</kbd> - <i>Swap (TBD)</i></li>
+  <li><kbd>Z</kbd> - <i>Swap</i></li>
   <li><kbd>F5</kbd> - <i>View save manager</i></li>
   <li><kbd>F9</kbd> - <i>Reset</i></li>
 </ul>
-<h3>5. Internal documentation excerpts</h3>
-<p>TBD</p>
-<h3>6. License</h3>
+<h3>5. License</h3>
 <i>See <a href="https://github.com/jakubekgranie/wpf-tetris/blob/master/LICENSE.txt">LICENSE.txt</a>.
 <br>
 I, the creator of the project, reserve the right for proper notification of this project's external usage and denial of such.</i>
